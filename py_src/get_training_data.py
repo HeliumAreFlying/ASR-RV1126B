@@ -8,7 +8,8 @@ def process_metadata_csv(csv_path, output_file):
     if not os.path.exists(csv_path):
         return
     with open(csv_path, 'r', encoding='utf-8') as f, open(output_file, 'w', encoding='utf-8') as out_f:
-        for line in f:
+        lines_from_file = f.readlines()
+        for line in tqdm(lines_from_file, desc="Processing metadata"):
             parts = line.strip().split('\t')
             if len(parts) < 2:
                 continue
