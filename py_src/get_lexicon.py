@@ -100,25 +100,17 @@ def entry():
     t_sentences = get_lines_with_auto_encoding_mode("corpus_cleaned_thu.txt")
     t_unigram, _ = get_parallel_data(list(set(s.strip() for s in t_sentences if len(s.strip()) >= 2)))
 
-    m_total = sum(m_unigram.values()) if m_unigram else 1
     unigram_dict = m_unigram
-
-    for other_uni, weight in [(n_unigram, 0.1), (t_unigram, 0.25)]:
-        other_total = sum(other_uni.values())
-        if other_total > 0:
-            factor = (m_total / other_total) * weight
-            for k, v in other_uni.items():
-                unigram_dict[k] = unigram_dict.get(k, 0) + int(v * factor)
 
     novel_dict_dir = r"C:\Users\Administrator\Desktop\2"
     filepaths = get_filepaths(novel_dict_dir)
     for fp in filepaths:
-        unigram_dict = update_unigram_from_source(unigram_dict, fp, weight=0.3)
+        unigram_dict = update_unigram_from_source(unigram_dict, fp, weight=0.1)
 
     thu_dict_dir = r"C:\Users\Administrator\Desktop\3"
     filepaths_thu = get_filepaths(thu_dict_dir)
     for fp in filepaths_thu:
-        unigram_dict = update_unigram_from_source(unigram_dict, fp, weight=0.6)
+        unigram_dict = update_unigram_from_source(unigram_dict, fp, weight=0.25)
 
     clean_bigram = {k: v for k, v in bigram_dict.items() if v > 0}
     final_token_dict = wrap_token_dict(unigram_dict)

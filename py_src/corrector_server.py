@@ -8,6 +8,7 @@ jieba.setLogLevel(logging.ERROR)
 import socket
 import os
 import sys
+from constant import correct_threshold
 from corrector import SentenceCorrector
 
 def start_server(socket_path="/tmp/corrector.sock"):
@@ -34,7 +35,7 @@ def start_server(socket_path="/tmp/corrector.sock"):
         try:
             data = conn.recv(2048).decode('utf-8')
             if data:
-                result, _, _ = corrector.correct(data)
+                result, _, _ = corrector.correct(data, threshold=correct_threshold)
                 conn.sendall(result.encode('utf-8'))
         except Exception:
             pass

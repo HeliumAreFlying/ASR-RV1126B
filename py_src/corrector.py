@@ -2,31 +2,32 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="jieba")
 
 import json
-import pickle
 import re
 import pypinyin
-from constant import N
-from sentence_evaluator import calculate_ngram_score
+from time import time
+from constant import N, correct_threshold
+from sentence_evaluator import NgramModel, calculate_ngram_score
 
 class SentenceCorrector:
-    def __init__(self, model_path="ngram.pkl", lexicon_path="token_dict.json"):
-        with open(model_path, "rb") as f:
-            self.ngram_data = pickle.load(f)
+    def __init__(self, model_path="ngram.db", lexicon_path="token_dict.json"):
+        self.ngram_model = NgramModel(model_path)
 
-        try:
-            with open(lexicon_path, "r", encoding="utf-8") as f:
-                lexicon_data = json.load(f)
-                self.homophone_dict = lexicon_data.get("unigram", {})
-        except FileNotFoundError:
-            self.homophone_dict = {}
+        with open(lexicon_path, "r", encoding="utf-8") as r:
+            lexicon_data = json.load(r)
+            self.homophone_dict = lexicon_data.get("unigram", {})
 
     def get_candidates_by_pinyin(self, text):
         py_key = ",".join(pypinyin.lazy_pinyin(text, style=pypinyin.Style.TONE))
         candidates = self.homophone_dict.get(py_key, {})
         return list(candidates.keys())
 
-    def correct(self, sentence, threshold=210.0):
-        original_score = calculate_ngram_score(sentence, self.ngram_data, n_order=N)
+    def get_ngram_count(self, gram, order_n):
+        self.cursor.execute('SELECT count FROM ngrams WHERE order_n = ? AND gram = ?', (order_n, gram))
+        result = self.cursor.fetchone()
+        return result[0] if result else 0
+
+    def correct(self, sentence, threshold):
+        original_score = calculate_ngram_score(sentence, self.ngram_model, n_order=N)
 
         if original_score >= threshold:
             return sentence, original_score, False
@@ -57,7 +58,7 @@ class SentenceCorrector:
                     temp_chars[i: i + window_size] = list(cand)
                     test_sentence = "".join(temp_chars)
 
-                    new_score = calculate_ngram_score(test_sentence, self.ngram_data, n_order=N)
+                    new_score = calculate_ngram_score(test_sentence, self.ngram_model, n_order=N)
 
                     if new_score > best_score:
                         best_score = new_score
@@ -65,7 +66,6 @@ class SentenceCorrector:
                         is_corrected = True
 
         return best_sentence, best_score, is_corrected
-
 
 if __name__ == '__main__':
     corrector = SentenceCorrector()
@@ -81,7 +81,16 @@ if __name__ == '__main__':
     print(f"{'原句':<20} | {'纠正后':<20} | {'最终分数':<8} | {'状态'}")
     print("-" * 75)
 
+    test_results = []
+
+    start_time = time()
     for sent in test_cases:
-        res, score, status = corrector.correct(sent)
+        res, score, status = corrector.correct(sent, threshold=correct_threshold)
         status_str = "已纠正" if status else "无需纠正"
-        print(f"{sent:<20} | {res:<20} | {score:<8.2f} | {status_str}")
+        test_results.append(f"{sent:<20} | {res:<20} | {score:<8.2f} | {status_str}")
+    end_time = time()
+
+    for test_result in test_results:
+        print(test_result)
+
+    print(f"\n平均用时 {(end_time - start_time) / len(test_cases) : .4f} 秒")
