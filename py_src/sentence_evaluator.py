@@ -6,6 +6,7 @@ import math
 import jieba
 import pickle
 import logging
+from constant import N
 jieba.setLogLevel(logging.ERROR)
 
 def calculate_ngram_score(sentence, ngram_dicts, n_order=3):
@@ -75,7 +76,7 @@ if __name__ == '__main__':
 
     results = []
     for s in test_cases:
-        results.append((s, calculate_ngram_score(s, ngram_data, n_order=3)))
+        results.append((s, calculate_ngram_score(s, ngram_data, n_order=N)))
 
     for s, sc in sorted(results, key=lambda x: x[1], reverse=True):
         print(f"{s:<30} | {sc:.2f}")

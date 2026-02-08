@@ -5,6 +5,7 @@ import json
 import pickle
 import re
 import pypinyin
+from constant import N
 from sentence_evaluator import calculate_ngram_score
 
 class SentenceCorrector:
@@ -25,7 +26,7 @@ class SentenceCorrector:
         return list(candidates.keys())
 
     def correct(self, sentence, threshold=210.0):
-        original_score = calculate_ngram_score(sentence, self.ngram_data, n_order=3)
+        original_score = calculate_ngram_score(sentence, self.ngram_data, n_order=N)
 
         if original_score >= threshold:
             return sentence, original_score, False
@@ -56,7 +57,7 @@ class SentenceCorrector:
                     temp_chars[i: i + window_size] = list(cand)
                     test_sentence = "".join(temp_chars)
 
-                    new_score = calculate_ngram_score(test_sentence, self.ngram_data, n_order=3)
+                    new_score = calculate_ngram_score(test_sentence, self.ngram_data, n_order=N)
 
                     if new_score > best_score:
                         best_score = new_score
