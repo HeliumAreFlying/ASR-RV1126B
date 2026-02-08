@@ -1,6 +1,7 @@
 import os
 import re
 from tqdm import tqdm
+from constant import encodings
 
 def process_metadata_csv(csv_path, output_file):
     pattern = re.compile(r'[\u4e00-\u9fa5]+')
@@ -22,7 +23,7 @@ def process_thu_dict(dict_dir, output_file):
 
     with open(output_file, 'w', encoding='utf-8') as out_f:
         for file_path in tqdm(file_list, desc="Processing THU Dict"):
-            for enc in ['utf-8', 'gb18030', 'gbk', 'utf-16']:
+            for enc in encodings:
                 try:
                     with open(file_path, 'r', encoding=enc) as f:
                         for line in f:
@@ -43,7 +44,7 @@ def generate_cleaned_corpus(novels_root_dir, output_file):
     with open(output_file, 'w', encoding='utf-8') as out_f:
         for file_path in tqdm(file_list, desc="Cleaning Novels"):
             content = ""
-            for enc in ['utf-8', 'gb18030', 'gbk', 'utf-16']:
+            for enc in encodings:
                 try:
                     with open(file_path, 'r', encoding=enc) as f:
                         content = f.read()

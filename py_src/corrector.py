@@ -17,7 +17,8 @@ class SentenceCorrector:
             self.homophone_dict = lexicon_data.get("unigram", {})
 
     def get_candidates_by_pinyin(self, text):
-        py_key = ",".join(pypinyin.lazy_pinyin(text, style=pypinyin.Style.TONE))
+        pinyin_results = [r[0] for r in pypinyin.pinyin(text, style=pypinyin.Style.TONE)]
+        py_key = ",".join(pinyin_results)
         candidates = self.homophone_dict.get(py_key, {})
         return list(candidates.keys())
 

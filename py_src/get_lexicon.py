@@ -6,6 +6,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="jieba")
 import jieba
 import logging
 import pypinyin
+from constant import encodings
 from multiprocessing import Pool, cpu_count
 jieba.setLogLevel(logging.ERROR)
 
@@ -49,33 +50,13 @@ def get_filepaths(directory, extension="txt"):
     return filepaths
 
 def get_lines_with_auto_encoding_mode(filepath):
-    for encoding_mode in ['utf-8', 'gb18030', 'gbk', 'utf-16']:
+    for encoding_mode in encodings:
         try:
             with open(filepath, "r", encoding=encoding_mode) as r:
                 return r.readlines()
         except:
             pass
     return []
-
-def update_unigram_from_source(unigram_dict, file_path, weight=1.0):
-    lines = get_lines_with_auto_encoding_mode(file_path)
-    current_source_unigram = {}
-    total_source_count = 0
-
-    for line in lines:
-        line = line.strip()
-        split_units = line.split("\t")
-        if len(split_units) == 2 and split_units[-1].isdigit():
-            token, count = split_units[0], int(split_units[1])
-            current_source_unigram[token] = count
-            total_source_count += count
-
-    if total_source_count > 0:
-        base_total = sum(unigram_dict.values()) if unigram_dict else 1000000
-        factor = (base_total / total_source_count) * weight
-        for token, count in current_source_unigram.items():
-            unigram_dict[token] = unigram_dict.get(token, 0) + int(count * factor)
-    return unigram_dict
 
 def wrap_token_dict(unigram_dict):
     token_dict = {}
@@ -100,17 +81,15 @@ def entry():
     t_sentences = get_lines_with_auto_encoding_mode("corpus_cleaned_thu.txt")
     t_unigram, _ = get_parallel_data(list(set(s.strip() for s in t_sentences if len(s.strip()) >= 2)))
 
+    m_total = sum(m_unigram.values()) if m_unigram else 1
     unigram_dict = m_unigram
 
-    novel_dict_dir = r"C:\Users\Administrator\Desktop\2"
-    filepaths = get_filepaths(novel_dict_dir)
-    for fp in filepaths:
-        unigram_dict = update_unigram_from_source(unigram_dict, fp, weight=0.1)
-
-    thu_dict_dir = r"C:\Users\Administrator\Desktop\3"
-    filepaths_thu = get_filepaths(thu_dict_dir)
-    for fp in filepaths_thu:
-        unigram_dict = update_unigram_from_source(unigram_dict, fp, weight=0.25)
+    for other_uni, weight in [(n_unigram, 0.1), (t_unigram, 0.25)]:
+        other_total = sum(other_uni.values())
+        if other_total > 0:
+            factor = (m_total / other_total) * weight
+            for k, v in other_uni.items():
+                unigram_dict[k] = unigram_dict.get(k, 0) + int(v * factor)
 
     clean_bigram = {k: v for k, v in bigram_dict.items() if v > 0}
     final_token_dict = wrap_token_dict(unigram_dict)
