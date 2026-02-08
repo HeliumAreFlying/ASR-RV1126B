@@ -24,7 +24,7 @@ class SentenceCorrector:
         candidates = self.homophone_dict.get(py_key, {})
         return list(candidates.keys())
 
-    def correct(self, sentence, threshold=193.0):
+    def correct(self, sentence, threshold=210.0):
         original_score = calculate_ngram_score(sentence, self.ngram_data, n_order=3)
 
         if original_score >= threshold:
@@ -56,7 +56,7 @@ class SentenceCorrector:
                     temp_chars[i: i + window_size] = list(cand)
                     test_sentence = "".join(temp_chars)
 
-                    new_score = calculate_ngram_score(test_sentence, self.ngram_data, n_order=4)
+                    new_score = calculate_ngram_score(test_sentence, self.ngram_data, n_order=3)
 
                     if new_score > best_score:
                         best_score = new_score

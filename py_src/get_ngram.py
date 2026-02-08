@@ -5,6 +5,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="jieba")
 
 import jieba
 import logging
+import gc
 from collections import defaultdict
 from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
@@ -27,8 +28,8 @@ def process_single_file(args):
                 for i in range(num_tokens):
                     for order in range(1, n + 1):
                         if i + order <= num_tokens:
-                            gram_tuple = tuple(tokens[i: i + order])
-                            local_ngram[order][gram_tuple] += 1
+                            gram_key = "".join(tokens[i: i + order])
+                            local_ngram[order][gram_key] += 1
     except Exception:
         pass
     return local_ngram
@@ -53,6 +54,8 @@ if __name__ == '__main__':
     target_files = ["corpus_cleaned_metadata.txt", "corpus_cleaned_novels.txt", "corpus_cleaned_thu.txt"]
     N = 3
     model_data = train_ngram_parallel(target_files, n=N)
+
+    gc.collect()
 
     with open("ngram.pkl", "wb") as f:
         pickle.dump(model_data, f, protocol=pickle.HIGHEST_PROTOCOL)

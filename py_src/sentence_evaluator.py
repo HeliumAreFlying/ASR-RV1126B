@@ -28,17 +28,17 @@ def calculate_ngram_score(sentence, ngram_dicts, n_order=3):
         found_match = False
 
         for order in range(min(i + 1, n_order), 0, -1):
-            gram_tuple = tuple(tokens[i - order + 1: i + 1])
+            gram_str = "".join(tokens[i - order + 1: i + 1])
             current_dict = ngram_dicts.get(order, {})
-            gram_count = current_dict.get(gram_tuple, 0)
+            gram_count = current_dict.get(gram_str, 0)
 
             if gram_count > 0:
                 if order == 1:
                     prob = (gram_count + alpha) / (total_unigram_count + alpha * vocab_size)
                 else:
-                    prev_gram_tuple = gram_tuple[:-1]
+                    prev_gram_str = "".join(tokens[i - order + 1: i])
                     prev_dict = ngram_dicts.get(order - 1, {})
-                    prev_count = prev_dict.get(prev_gram_tuple, 0)
+                    prev_count = prev_dict.get(prev_gram_str, 0)
                     prob = (gram_count + alpha) / (prev_count + alpha * vocab_size)
 
                 if order < n_order:
@@ -51,7 +51,8 @@ def calculate_ngram_score(sentence, ngram_dicts, n_order=3):
             prob *= (0.1 ** n_order)
 
         total_log_prob += math.log10(prob)
-        if unigrams.get((tokens[i],), 0) > 0:
+
+        if unigrams.get(tokens[i], 0) > 0:
             match_chars += len(tokens[i])
 
     avg_lp = total_log_prob / n_tokens
@@ -74,7 +75,7 @@ if __name__ == '__main__':
 
     results = []
     for s in test_cases:
-        results.append((s, calculate_ngram_score(s, ngram_data, n_order=4)))
+        results.append((s, calculate_ngram_score(s, ngram_data, n_order=3)))
 
     for s, sc in sorted(results, key=lambda x: x[1], reverse=True):
         print(f"{s:<30} | {sc:.2f}")
