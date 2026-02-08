@@ -51,7 +51,7 @@ def merge_databases(output_db, db_paths):
     cur_out = conn_out.cursor()
     create_schema(cur_out)
     conn_out.close()
-    for db_path in db_paths:
+    for db_path in tqdm(db_paths, "Merging databases"):
         if not db_path or not os.path.exists(db_path):
             continue
         try:
@@ -93,7 +93,7 @@ def train_entry():
     chunks = [all_lines[i:i + chunk_size] for i in range(0, len(all_lines), chunk_size)]
     db_paths = []
     with Pool(processes=min(cpu_count(), len(chunks))) as pool:
-        for res in tqdm(pool.imap_unordered(process_chunk_to_db, chunks), total=len(chunks), desc="Processing"):
+        for res in tqdm(pool.imap_unordered(process_chunk_to_db, chunks), total=len(chunks), desc="Processing chunks"):
             if res:
                 db_paths.append(res)
     merge_databases("ngram.db", db_paths)
