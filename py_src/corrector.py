@@ -25,7 +25,7 @@ class SentenceCorrector:
         return list(candidates.keys())
 
     def correct(self, sentence, threshold=193.0):
-        original_score = calculate_ngram_score(sentence, self.ngram_data, n_order=4)
+        original_score = calculate_ngram_score(sentence, self.ngram_data, n_order=3)
 
         if original_score >= threshold:
             return sentence, original_score, False

@@ -51,7 +51,7 @@ def train_ngram_parallel(file_list, n=3):
 
 if __name__ == '__main__':
     target_files = ["corpus_cleaned_metadata.txt", "corpus_cleaned_novels.txt", "corpus_cleaned_thu.txt"]
-    N = 4
+    N = 3
     model_data = train_ngram_parallel(target_files, n=N)
 
     with open("ngram.pkl", "wb") as f:
