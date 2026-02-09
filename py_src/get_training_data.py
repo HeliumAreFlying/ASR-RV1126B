@@ -29,8 +29,11 @@ def get_valid_file_cursor(filepath):
             continue
     raise RuntimeError("cannot find valid file cursor")
 
+def get_chinese_pattern():
+    return re.compile(r'[\u4e00-\u9fa5]+')
+
 def process_thu_dict(dict_dir, output_file):
-    pattern = re.compile(r'[\u4e00-\u9fa5]+')
+    pattern = get_chinese_pattern()
     file_list = [os.path.join(root, f) for root, _, files in os.walk(dict_dir) for f in files if f.endswith('.txt')]
 
     with open(output_file, 'w', encoding='utf-8') as out_f:
@@ -45,7 +48,7 @@ def process_thu_dict(dict_dir, output_file):
             f.close()
 
 def generate_cleaned_corpus(novels_root_dir, output_file):
-    pattern = re.compile(r'[\u4e00-\u9fa5]+')
+    pattern = get_chinese_pattern()
     file_list = [
         os.path.join(root, f) for root, _, files in os.walk(novels_root_dir)
         for f in files if f.endswith('.txt')
