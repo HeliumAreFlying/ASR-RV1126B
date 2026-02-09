@@ -5,7 +5,7 @@ import json
 import re
 import pypinyin
 from time import time
-from constant import N, correct_threshold
+from constant import N, correct_threshold, corrector_window_size
 from sentence_evaluator import NgramModel, calculate_ngram_score
 
 class SentenceCorrector:
@@ -44,7 +44,7 @@ class SentenceCorrector:
             if not re.match(r'[\u4e00-\u9fa5]', char_list[i]):
                 continue
 
-            for window_size in range(1, 4):
+            for window_size in range(1, corrector_window_size):
                 if i + window_size > n:
                     continue
 
