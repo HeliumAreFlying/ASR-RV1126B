@@ -7,7 +7,7 @@ import jieba
 import logging
 import pypinyin
 from multiprocessing import Pool, cpu_count
-from constant import encodings, pinyin_mode, min_token_length
+from constant import encodings, pinyin_mode, min_token_length_for_bi_key
 jieba.setLogLevel(logging.ERROR)
 
 def get_shared_token_key(token):
@@ -19,8 +19,8 @@ def process_chunk_task(sentences_chunk):
     local_bigram = {}
     for s in sentences_chunk:
         tokens = jieba.lcut(s)
-        if min_token_length > 0:
-            tokens = [t for t in tokens if len(t) > min_token_length]
+        if min_token_length_for_bi_key > 0:
+            tokens = [t for t in tokens if len(t) > min_token_length_for_bi_key]
         for i, token in enumerate(tokens):
             local_unigram[token] = local_unigram.get(token, 0) + 1
             if i > 0:
