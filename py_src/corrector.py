@@ -13,8 +13,7 @@ class SentenceCorrector:
         self.ngram_model = NgramModel(model_path)
 
         with open(lexicon_path, "r", encoding="utf-8") as r:
-            lexicon_data = json.load(r)
-            self.homophone_dict = lexicon_data.get("unigram", {})
+            self.homophone_dict = json.load(r)
 
     def get_candidates_by_pinyin(self, text):
         pinyin_results = [r[0] for r in pypinyin.pinyin(text, style=pinyin_mode)]

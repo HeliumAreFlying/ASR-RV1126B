@@ -7,7 +7,7 @@ import jieba
 import logging
 import pypinyin
 from multiprocessing import Pool, cpu_count
-from constant import encodings, pinyin_mode, min_token_length_for_bi_key
+from constant import encodings, pinyin_mode, min_token_length_for_bi_key, soft_percent_for_bi_key_when_lower_than_min_token_length
 jieba.setLogLevel(logging.ERROR)
 
 def get_shared_token_key(token):
@@ -16,17 +16,11 @@ def get_shared_token_key(token):
 
 def process_chunk_task(sentences_chunk):
     local_unigram = {}
-    local_bigram = {}
     for s in sentences_chunk:
         tokens = jieba.lcut(s)
-        if min_token_length_for_bi_key > 0:
-            tokens = [t for t in tokens if len(t) > min_token_length_for_bi_key]
         for i, token in enumerate(tokens):
             local_unigram[token] = local_unigram.get(token, 0) + 1
-            if i > 0:
-                bi_key = f"{tokens[i - 1]}\t{token}"
-                local_bigram[bi_key] = local_bigram.get(bi_key, 0) + 1
-    return local_unigram, local_bigram
+    return local_unigram
 
 def get_parallel_data(sentences):
     num_workers = cpu_count()
@@ -37,11 +31,10 @@ def get_parallel_data(sentences):
         results = pool.map(process_chunk_task, chunks)
 
     combined_unigram = {}
-    combined_bigram = {}
-    for uni, bi in results:
+    for uni in results:
         for k, v in uni.items(): combined_unigram[k] = combined_unigram.get(k, 0) + v
-        for k, v in bi.items(): combined_bigram[k] = combined_bigram.get(k, 0) + v
-    return combined_unigram, combined_bigram
+
+    return combined_unigram
 
 def get_filepaths(directory, extension="txt"):
     filepaths = []
@@ -75,13 +68,13 @@ def entry():
     token_dict_dump_dir = "token_dict.json"
 
     m_sentences = get_lines_with_auto_encoding_mode("corpus_cleaned_metadata.txt")
-    m_unigram, bigram_dict = get_parallel_data(list(set(s.strip() for s in m_sentences if len(s.strip()) >= 4)))
+    m_unigram = get_parallel_data(list(set(s.strip() for s in m_sentences if len(s.strip()) >= 4)))
 
     n_sentences = get_lines_with_auto_encoding_mode("corpus_cleaned_novels.txt")
-    n_unigram, _ = get_parallel_data(list(set(s.strip() for s in n_sentences if len(s.strip()) >= 4)))
+    n_unigram = get_parallel_data(list(set(s.strip() for s in n_sentences if len(s.strip()) >= 4)))
 
     t_sentences = get_lines_with_auto_encoding_mode("corpus_cleaned_thu.txt")
-    t_unigram, _ = get_parallel_data(list(set(s.strip() for s in t_sentences if len(s.strip()) >= 2)))
+    t_unigram = get_parallel_data(list(set(s.strip() for s in t_sentences if len(s.strip()) >= 2)))
 
     m_total = sum(m_unigram.values()) if m_unigram else 1
     unigram_dict = m_unigram
@@ -93,17 +86,15 @@ def entry():
             for k, v in other_uni.items():
                 unigram_dict[k] = unigram_dict.get(k, 0) + int(v * factor)
 
-    clean_bigram = {k: v for k, v in bigram_dict.items() if v > 0}
     final_token_dict = wrap_token_dict(unigram_dict)
 
     with open(token_dict_dump_dir, "w", encoding="utf-8") as w:
-        json.dump({"unigram": final_token_dict, "bigram": clean_bigram}, w, ensure_ascii=False)
+        json.dump(final_token_dict, w, ensure_ascii=False)
 
 def check():
     if os.path.exists("token_dict.json"):
         with open("token_dict.json", "r", encoding="utf-8") as r:
-            data = json.load(r)
-            target = data["unigram"]
+            target = json.load(r)
             vocab_size = sum(len(sub) for sub in target.values())
             print(f"vocab size is equal to {vocab_size}")
 
