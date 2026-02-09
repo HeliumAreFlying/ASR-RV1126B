@@ -27,9 +27,7 @@ class SentenceCorrector:
         result = self.cursor.fetchone()
         return result[0] if result else 0
 
-    def single_correct(self, sentence, threshold):
-        original_score = calculate_ngram_score(sentence, self.ngram_model, n_order=N)
-
+    def single_correct(self, sentence, original_score, threshold):
         if original_score >= threshold:
             return sentence, original_score, False
 
@@ -69,15 +67,18 @@ class SentenceCorrector:
         return best_sentence, best_score, is_corrected
 
     def correct(self, sentence, threshold, n_correct = 4):
-        best_sentence, best_score, is_corrected = sentence, 0, False
+        best_sentence, is_corrected = sentence, False
+        best_score = calculate_ngram_score(sentence, self.ngram_model, n_order=N)
+
         for n in range(n_correct):
-            better_sentence, better_score, current_sentence_is_corrected = self.single_correct(best_sentence, threshold)
+            better_sentence, better_score, current_sentence_is_corrected = self.single_correct(best_sentence, best_score, threshold)
             best_sentence = better_sentence
             best_score = max(best_score, better_score)
             if not current_sentence_is_corrected:
                 break
             else:
                 is_corrected = is_corrected or current_sentence_is_corrected
+
         return best_sentence, best_score, is_corrected
 
 if __name__ == '__main__':
