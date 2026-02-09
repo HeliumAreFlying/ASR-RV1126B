@@ -69,11 +69,15 @@ class SentenceCorrector:
         return best_sentence, best_score, is_corrected
 
     def correct(self, sentence, threshold, n_correct = 4):
-        best_sentence, best_score, is_corrected = sentence, None, False
+        best_sentence, best_score, is_corrected = sentence, 0, False
         for n in range(n_correct):
-            best_sentence, best_score, is_corrected = self.single_correct(best_sentence, threshold)
-            if not is_corrected:
+            better_sentence, better_score, current_sentence_is_corrected = self.single_correct(best_sentence, threshold)
+            best_sentence = better_sentence
+            best_score = max(best_score, better_score)
+            if not current_sentence_is_corrected:
                 break
+            else:
+                is_corrected = is_corrected or current_sentence_is_corrected
         return best_sentence, best_score, is_corrected
 
 if __name__ == '__main__':
