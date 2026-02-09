@@ -22,14 +22,7 @@ def process_chunk_to_db(lines_chunk):
     try:
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
-
-        try:
-            cur.execute('PRAGMA journal_mode=WAL')
-        except:
-            pass
-
         create_schema(cur)
-
         for line in lines_chunk:
             line = line.strip()
             if not line: continue
@@ -41,11 +34,9 @@ def process_chunk_to_db(lines_chunk):
                         k = "".join(tokens[i:i + o])
                         cur.execute('INSERT OR IGNORE INTO ngrams (order_n, gram, count) VALUES (?, ?, 0)', (o, k))
                         cur.execute('UPDATE ngrams SET count = count + 1 WHERE order_n = ? AND gram = ?', (o, k))
-
-        conn.commit()  # 统一提交
+        conn.commit()
         conn.close()
         return db_path
-
     except Exception as e:
         print(f"Error: {e}")
         if os.path.exists(db_path):
@@ -58,15 +49,8 @@ def merge_databases(output_db, db_paths):
         os.remove(output_db)
     conn_out = sqlite3.connect(output_db)
     cur_out = conn_out.cursor()
-
-    try:
-        cur_out.execute('PRAGMA journal_mode=WAL')
-    except:
-        pass
-
     create_schema(cur_out)
     conn_out.close()
-
     for db_path in tqdm(db_paths, "Merging Databases"):
         if not db_path or not os.path.exists(db_path):
             continue
@@ -75,36 +59,25 @@ def merge_databases(output_db, db_paths):
             cur_src = conn_src.cursor()
             conn_dest = sqlite3.connect(output_db)
             cur_dest = conn_dest.cursor()
-
             cur_src.execute("SELECT order_n, gram, count FROM ngrams")
             rows = cur_src.fetchall()
             if rows:
-                cur_dest.executemany('INSERT OR IGNORE INTO ngrams (order_n, gram, count) VALUES (?, ?, 0)',
-                                     [(r[0], r[1]) for r in rows])
-                cur_dest.executemany('UPDATE ngrams SET count = count + ? WHERE order_n = ? AND gram = ?',
-                                     [(r[2], r[0], r[1]) for r in rows])
+                cur_dest.executemany('INSERT OR IGNORE INTO ngrams (order_n, gram, count) VALUES (?, ?, 0)', [(r[0], r[1]) for r in rows])
+                cur_dest.executemany('UPDATE ngrams SET count = count + ? WHERE order_n = ? AND gram = ?', [(r[2], r[0], r[1]) for r in rows])
                 conn_dest.commit()
-
             conn_src.close()
             conn_dest.close()
             os.remove(db_path)
             shutil.rmtree(os.path.dirname(db_path), ignore_errors=True)
-
         except Exception as e:
             print(f"Merge error: {e}")
             try:
                 if 'conn_src' in locals(): conn_src.close()
                 if 'conn_dest' in locals(): conn_dest.close()
-            except:
-                pass
-
+            except: pass
     conn_final = sqlite3.connect(output_db)
     cur_final = conn_final.cursor()
     cur_final.execute('DELETE FROM ngrams WHERE order_n > 1 AND count <= 1')
-
-    cur_final.execute('PRAGMA wal_checkpoint(TRUNCATE)')
-    cur_final.execute('VACUUM')
-
     conn_final.commit()
     conn_final.close()
 
