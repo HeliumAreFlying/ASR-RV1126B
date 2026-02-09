@@ -44,7 +44,7 @@ class SentenceCorrector:
             if not re.match(r'[\u4e00-\u9fa5]', char_list[i]):
                 continue
 
-            for window_size in range(1, corrector_window_size):
+            for window_size in range(1, corrector_window_size + 1):
                 if i + window_size > n:
                     continue
 
