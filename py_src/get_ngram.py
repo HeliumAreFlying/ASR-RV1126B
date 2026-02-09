@@ -29,7 +29,7 @@ def process_chunk_to_db(lines_chunk):
             tokens = jieba.lcut(line)
             L = len(tokens)
             for i in range(L):
-                for o in range(1, N):
+                for o in range(1, N + 1):
                     if i + o <= L:
                         k = "".join(tokens[i:i + o])
                         cur.execute('INSERT OR IGNORE INTO ngrams (order_n, gram, count) VALUES (?, ?, 0)', (o, k))
