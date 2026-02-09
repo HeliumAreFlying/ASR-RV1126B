@@ -69,9 +69,10 @@ class SentenceCorrector:
     def correct(self, sentence, threshold, n_correct = 4):
         best_sentence, is_corrected = sentence, False
         best_score = calculate_ngram_score(sentence, self.ngram_model, n_order=N)
-
         for n in range(n_correct):
-            better_sentence, better_score, current_sentence_is_corrected = self.single_correct(best_sentence, best_score, threshold)
+            better_sentence, better_score, current_sentence_is_corrected = self.single_correct(sentence=best_sentence,
+                                                                                               original_score=best_score,
+                                                                                               threshold=threshold)
             best_sentence = better_sentence
             best_score = max(best_score, better_score)
             if not current_sentence_is_corrected:
