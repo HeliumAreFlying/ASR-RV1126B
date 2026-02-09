@@ -5,8 +5,8 @@ import json
 import re
 import pypinyin
 from time import time
-from constant import N, correct_threshold, corrector_window_size
 from sentence_evaluator import NgramModel, calculate_ngram_score
+from constant import N, correct_threshold, corrector_window_size, pinyin_mode
 
 class SentenceCorrector:
     def __init__(self, model_path="ngram.db", lexicon_path="token_dict.json"):
@@ -17,7 +17,7 @@ class SentenceCorrector:
             self.homophone_dict = lexicon_data.get("unigram", {})
 
     def get_candidates_by_pinyin(self, text):
-        pinyin_results = [r[0] for r in pypinyin.pinyin(text, style=pypinyin.Style.TONE)]
+        pinyin_results = [r[0] for r in pypinyin.pinyin(text, style=pinyin_mode)]
         py_key = ",".join(pinyin_results)
         candidates = self.homophone_dict.get(py_key, {})
         return list(candidates.keys())
@@ -85,11 +85,11 @@ if __name__ == '__main__':
     corrector = SentenceCorrector()
 
     test_cases = [
-        "母亲叮嘱我学习要深钻戏言。",
+        "目亲叮嘱我学习要深钻戏言。",
         "炮也打好了，炸药怎么装？",
         "平果园里有很多的平果。",
         "今天去哪里玩比较好？",
-        "你居然七负我！"
+        "拟居然七负我！"
     ]
 
     print(f"{'原句':<20} | {'纠正后':<20} | {'最终分数':<8} | {'状态'}")

@@ -6,12 +6,12 @@ warnings.filterwarnings("ignore", category=UserWarning, module="jieba")
 import jieba
 import logging
 import pypinyin
-from constant import encodings
+from constant import encodings, pinyin_mode
 from multiprocessing import Pool, cpu_count
 jieba.setLogLevel(logging.ERROR)
 
 def get_shared_token_key(token):
-    pinyins = pypinyin.lazy_pinyin(token, style=pypinyin.Style.TONE)
+    pinyins = pypinyin.lazy_pinyin(token, style=pinyin_mode)
     return ','.join(pinyins)
 
 def process_chunk_task(sentences_chunk):
