@@ -90,12 +90,12 @@ def entry():
     for token, freq in unigram_dict.items():
         if len(token) < min_token_length_for_bi_key:
             invalid_token_dict[token] = freq
-    
+
     invalid_tokens = list(invalid_token_dict.keys())
     invalid_tokens.sort(key=lambda invalid_token : invalid_token_dict[invalid_token], reverse=True)
     soft_invalid_tokens = invalid_tokens[round(soft_percent_for_bi_key_when_lower_than_min_token_length * len(invalid_tokens)):]
     for soft_invalid_token in soft_invalid_tokens:
-        unigram_dict.pop(soft_invalid_token)
+        del unigram_dict[soft_invalid_token]
 
     final_token_dict = wrap_token_dict(unigram_dict)
 

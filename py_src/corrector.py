@@ -26,6 +26,22 @@ class SentenceCorrector:
         result = self.cursor.fetchone()
         return result[0] if result else 0
 
+    def get_candidate_cache(self,char_list):
+        candidate_cache = {}
+        n = len(char_list)
+        for i in range(n):
+            if not re.match(r'[\u4e00-\u9fa5]', char_list[i]):
+                continue
+
+            for window_size in range(1, corrector_window_size + 1):
+                if i + window_size > n:
+                    continue
+
+                target_text = "".join(char_list[i: i + window_size])
+                candidates = self.get_candidates_by_pinyin(target_text)
+                candidate_cache[target_text] = candidates
+        return candidate_cache
+
     def single_correct(self, sentence, original_score, threshold):
         if original_score >= threshold:
             return sentence, original_score, False
@@ -37,6 +53,8 @@ class SentenceCorrector:
         char_list = list(sentence)
         n = len(char_list)
 
+        candidate_cache = self.get_candidate_cache(char_list)
+
         for i in range(n):
             if not re.match(r'[\u4e00-\u9fa5]', char_list[i]):
                 continue
@@ -46,7 +64,7 @@ class SentenceCorrector:
                     continue
 
                 target_text = "".join(char_list[i: i + window_size])
-                candidates = self.get_candidates_by_pinyin(target_text)
+                candidates = candidate_cache[target_text]
 
                 for cand in candidates:
                     if cand == target_text:
